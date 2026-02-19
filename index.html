@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таксопарк - Админ панель</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .tab:hover {
+            background: #f0f2f5;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        select, input, button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #5a67d8;
+        }
+
+        button.secondary {
+            background: #48bb78;
+        }
+
+        button.secondary:hover {
+            background: #38a169;
+        }
+
+        button.warning {
+            background: #f6ad55;
+        }
+
+        button.warning:hover {
+            background: #ed8936;
+        }
+
+        button.danger {
+            background: #fc8181;
+        }
+
+        button.danger:hover {
+            background: #f56565;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #ddd;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-FREE { background: #c6f6d5; color: #22543d; }
+        .status-BUSY { background: #fed7d7; color: #742a2a; }
+        .status-REPAIR { background: #feebc8; color: #744210; }
+
+        .rating-high { color: #38a169; font-weight: 600; }
+        .rating-low { color: #e53e3e; font-weight: 600; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .info-card {
+            background: #ebf8ff;
+            border-left: 4px solid #4299e1;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons button {
+            padding: 6px 12px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                width: 100%;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚕 Таксопарк - Административная панель</h1>
+            <div class="subtitle">Управление автопарком и водителями</div>
+        </header>
+
+        <!-- Статистика -->
+        <div class="stats-grid" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalCars">-</div>
+                <div class="stat-label">Всего автомобилей</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="freeCars">-</div>
+                <div class="stat-label">Свободны</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="busyCars">-</div>
+                <div class="stat-label">Заняты</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="repairCars">-</div>
+                <div class="stat-label">В ремонте</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalDrivers">-</div>
+                <div class="stat-label">Активных водителей</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgRating">-</div>
+                <div class="stat-label">Средний рейтинг</div>
+            </div>
+        </div>
+
+        <!-- Вкладки -->
+        <div class="tabs">
+            <button class="tab active" data-tab="cars">🚗 Автомобили</button>
+            <button class="tab" data-tab="drivers">👨‍✈️ Водители</button>
+            <button class="tab" data-tab="repair">🔧 В ремонте</button>
+            <button class="tab" data-tab="low-rating">⚠️ Низкий рейтинг</button>
+            <button class="tab" data-tab="add-car">➕ Добавить авто</button>
+            <button class="tab" data-tab="add-driver">👤 Добавить водителя</button>
+        </div>
+
+        <!-- Уведомления -->
+        <div id="notifications"></div>
+
+        <!-- Контентные панели -->
+        <div id="content"></div>
+    </div>
+
+    <!-- Модальное окно редактирования -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Редактирование</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация
+        const API_URL = 'http://localhost:8000';
+        const LOW_RATING_THRESHOLD = 4.0;
+
+        // Состояние приложения
+        let currentTab = 'cars';
+        let carsData = [];
+        let driversData = [];
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllData();
+            setupEventListeners();
+            renderTab(currentTab);
+        });
+
+        // Загрузка всех данных
+        async function loadAllData() {
+            try {
+                showLoading();
+                const [cars, drivers] = await Promise.all([
+                    fetch(`${API_URL}/cars`).then(res => res.json()),
+                    fetch(`${API_URL}/drivers?only_active=true`).then(res => res.json())
+                ]);
+                carsData = cars;
+                driversData = drivers;
+                updateStats();
+                hideLoading();
+            } catch (error) {
+                showNotification('Ошибка загрузки данных: ' + error.message, 'error');
+                hideLoading();
+            }
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            document.getElementById('totalCars').textContent = carsData.length;
+            document.getElementById('freeCars').textContent = carsData.filter(c => c.status === 'FREE').length;
+            document.getElementById('busyCars').textContent = carsData.filter(c => c.status === 'BUSY').length;
+            document.getElementById('repairCars').textContent = carsData.filter(c => c.status === 'REPAIR').length;
+            document.getElementById('totalDrivers').textContent = driversData.length;
+            
+            const avg = driversData.reduce((acc, d) => acc + d.rating, 0) / driversData.length || 0;
+            document.getElementById('avgRating').textContent = avg.toFixed(2);
+        }
+
+        // Обработчики событий
+        function setupEventListeners() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentTab = tab.dataset.tab;
+                    renderTab(currentTab);
+                });
+            });
+        }
+
+        // Рендеринг вкладок
+        function renderTab(tab) {
+            switch(tab) {
+                case 'cars':
+                    renderCarsTab();
+                    break;
+                case 'drivers':
+                    renderDriversTab();
+                    break;
+                case 'repair':
+                    renderRepairTab();
+                    break;
+                case 'low-rating':
+                    renderLowRatingTab();
+                    break;
+                case 'add-car':
+                    renderAddCarForm();
+                    break;
+                case 'add-driver':
+                    renderAddDriverForm();
+                    break;
+            }
+        }
+
+        // Вкладка автомобилей
+        function renderCarsTab() {
+            const filterHtml = `
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Статус:</label>
+                        <select id="carStatusFilter" onchange="applyCarFilters()">
+                            <option value="all">Все</option>
+                            <option value="FREE">Свободны</option>
+                            <option value="BUSY">Заняты</option>
+                            <option value="REPAIR">В ремонте</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Расстояние до:</label>
+                        <input type="number" id="maxDistance" placeholder="км" onchange="applyCarFilters()">
+                    </div>
+                    <button onclick="refreshData()">🔄 Обновить</button>
+                </div>
+            `;
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Госномер</th>
+                                <th>Марка</th>
+                                <th>Цвет</th>
+                                <th>Статус</th>
+                                <th>Расстояние</th>
+                                <th>Водитель</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="carsTableBody">
+                            ${renderCarsRows()}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = filterHtml + tableHtml;
+        }
+
+        function renderCarsRows() {
+            const statusFilter = document.getElementById('carStatusFilter')?.value || 'all';
+            const maxDistance = parseFloat(document.getElementById('maxDistance')?.value);
+            
+            let filteredCars = carsData;
+            
+            if (statusFilter !== 'all') {
+                filteredCars = filteredCars.filter(c => c.status === statusFilter);
+            }
+            
+            if (!isNaN(maxDistance)) {
+                filteredCars = filteredCars.filter(c => c.distance <= maxDistance);
+            }
+
+            return filteredCars.map(car => `
+                <tr>
+                    <td>${car.id}</td>
+                    <td><strong>${car.license_plate}</strong></td>
+                    <td>${car.brand}</td>
+                    <td>${car.color}</td>
+                    <td><span class="status-badge status-${car.status}">${car.status}</span></td>
+                    <td>${car.distance} км</td>
+                    <td>${car.driver ? car.driver.full_name.split(' ')[0] : '—'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="editCar(${car.id})" class="secondary">✏️</button>
+                            <button onclick="changeCarStatus(${car.id}, 'FREE')" class="${car.status === 'FREE' ? 'warning' : 'secondary'}">🚖</button>
+                            <button onclick="changeCarStatus(${car.id}, 'BUSY')" class="${car.status === 'BUSY' ? 'warning' : 'secondary'}">🏃</button>
+                            <button onclick="changeCarStatus(${car.id}, 'REPAIR')" class="${car.status === 'REPAIR' ? 'warning' : 'secondary'}">🔧</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Вкладка водителей
+        function renderDriversTab() {
+            const filterHtml = `
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Мин. рейтинг:</label>
+                        <input type="number" id="minRating" min="0" max="5" step="0.1" placeholder="4.0" onchange="applyDriverFilters()">
+                    </div>
+                    <button onclick="refreshData()">🔄 Обновить</button>
+                </div>
+            `;
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>ФИО</th>
+                                <th>Телефон</th>
+                                <th>Рейтинг</th>
+                                <th>Автомобиль</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driversTableBody">
+                            ${renderDriversRows()}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = filterHtml + tableHtml;
+        }
+
+        function renderDriversRows() {
+            const minRating = parseFloat(document.getElementById('minRating')?.value);
+            
+            let filteredDrivers = driversData;
+            
+            if (!isNaN(minRating)) {
+                filteredDrivers = filteredDrivers.filter(d => d.rating >= minRating);
+            }
+
+            return filteredDrivers.map(driver => `
+                <tr>
+                    <td>${driver.id}</td>
+                    <td><strong>${driver.full_name}</strong></td>
+                    <td>${driver.phone}</td>
+                    <td class="${driver.rating < 4.0 ? 'rating-low' : 'rating-high'}">
+                        ${driver.rating.toFixed(2)} ⭐
+                    </td>
+                    <td>${driver.car ? driver.car.license_plate : '—'}</td>
+                    <td>${driver.is_active ? '✅ Активен' : '❌ Неактивен'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="editDriver(${driver.id})" class="secondary">✏️</button>
+                            ${driver.is_active ? 
+                                `<button onclick="toggleDriverStatus(${driver.id}, false)" class="warning">❌</button>` :
+                                `<button onclick="toggleDriverStatus(${driver.id}, true)" class="secondary">✅</button>`
+                            }
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Вкладка машин в ремонте
+        async function renderRepairTab() {
+            try {
+                const response = await fetch(`${API_URL}/cars/in-repair`);
+                const repairCars = await response.json();
+                
+                const html = `
+                    <div class="info-card">
+                        🚧 Сейчас в ремонте ${repairCars.length} автомобилей
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Госномер</th>
+                                    <th>Марка</th>
+                                    <th>Цвет</th>
+                                    <th>Расстояние до парка</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${repairCars.map(car => `
+                                    <tr>
+                                        <td>${car.id}</td>
+                                        <td><strong>${car.license_plate}</strong></td>
+                                        <td>${car.brand}</td>
+                                        <td>${car.color}</td>
+                                        <td>${car.distance} км</td>
+                                        <td>
+                                            <button onclick="changeCarStatus(${car.id}, 'FREE')" class="secondary">
+                                                🚖 Вернуть в парк
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                showNotification('Ошибка загрузки данных', 'error');
+            }
+        }
+
+        // Вкладка низкого рейтинга
+        async function renderLowRatingTab() {
+            try {
+                const response = await fetch(`${API_URL}/drivers/low-rating?threshold=${LOW_RATING_THRESHOLD}`);
+                const lowRatingDrivers = await response.json();
+                
+                const html = `
+                    <div class="info-card">
+                        ⚠️ ${lowRatingDrivers.length} водителей имеют рейтинг ниже ${LOW_RATING_THRESHOLD}
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>ФИО</th>
+                                    <th>Телефон</th>
+                                    <th>Рейтинг</th>
+                                    <th>Автомобиль</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${lowRatingDrivers.map(driver => `
+                                    <tr>
+                                        <td>${driver.id}</td>
+                                        <td><strong>${driver.full_name}</strong></td>
+                                        <td>${driver.phone}</td>
+                                        <td class="rating-low">${driver.rating.toFixed(2)} ⭐</td>
+                                        <td>${driver.car_id ? 'Привязан' : 'Нет авто'}</td>
+                                        <td>
+                                            <button onclick="editDriver(${driver.id})" class="secondary">
+                                                ✏️ Редактировать
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                document.getElementById('content').innerHTML = html;
+            } catch (error) {
+                showNotification('Ошибка загрузки данных', 'error');
+            }
+        }
+
+        // Форма добавления автомобиля
+        function renderAddCarForm() {
+            const html = `
+                <h2>➕ Добавить новый автомобиль</h2>
+                <div style="max-width: 500px;">
+                    <div class="form-group">
+                        <label>Госномер *</label>
+                        <input type="text" id="carLicense" placeholder="А123БВ777" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Марка *</label>
+                        <input type="text" id="carBrand" placeholder="Toyota" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Цвет *</label>
+                        <input type="text" id="carColor" placeholder="Белый" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Расстояние до парка (км) *</label>
+                        <input type="number" id="carDistance" min="0.1" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Статус</label>
+                        <select id="carStatus">
+                            <option value="FREE">Свободен</option>
+                            <option value="BUSY">Занят</option>
+                            <option value="REPAIR">В ремонте</option>
+                        </select>
+                    </div>
+                    <button onclick="addCar()" class="secondary" style="width: 100%;">✅ Добавить автомобиль</button>
+                </div>
+            `;
+            
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // Форма добавления водителя
+        function renderAddDriverForm() {
+            const freeCars = carsData.filter(c => c.status === 'FREE' && !c.driver);
+            
+            const html = `
+                <h2>👤 Добавить нового водителя</h2>
+                <div style="max-width: 500px;">
+                    <div class="form-group">
+                        <label>ФИО *</label>
+                        <input type="text" id="driverName" placeholder="Иванов Иван Иванович" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Телефон *</label>
+                        <input type="text" id="driverPhone" placeholder="+79001234567" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Рейтинг</label>
+                        <input type="number" id="driverRating" min="0" max="5" step="0.1" value="5.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Автомобиль</label>
+                        <select id="driverCar">
+                            <option value="">Без автомобиля</option>
+                            ${freeCars.map(car => `
+                                <option value="${car.id}">${car.license_plate} - ${car.brand}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <button onclick="addDriver()" class="secondary" style="width: 100%;">✅ Добавить водителя</button>
+                </div>
+            `;
+            
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // API функции
+        async function changeCarStatus(carId, newStatus) {
+            try {
+                const response = await fetch(`${API_URL}/cars/${carId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (response.ok) {
+                    showNotification(`Статус автомобиля изменён на ${newStatus}`, 'success');
+                    await refreshData();
+                    renderTab(currentTab);
+                } else {
+                    throw new Error('Ошибка изменения статуса');
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function addCar() {
+            const carData = {
+                license_plate: document.getElementById('carLicense').value,
+                brand: document.getElementById('carBrand').value,
+                color: document.getElementById('carColor').value,
+                distance: parseFloat(document.getElementById('carDistance').value),
+                status: document.getElementById('carStatus').value
+            };
+
+            if (!carData.license_plate || !carData.brand || !carData.color || !carData.distance) {
+                showNotification('Заполните все обязательные поля', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/cars`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(carData)
+                });
+
+                if (response.ok) {
+                    showNotification('Автомобиль успешно добавлен', 'success');
+                    await refreshData();
+                    currentTab = 'cars';
+                    renderTab('cars');
+                    document.querySelector('[data-tab="cars"]').classList.add('active');
+                    document.querySelector('[data-tab="add-car"]').classList.remove('active');
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка добавления');
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function addDriver() {
+            const driverData = {
+                full_name: document.getElementById('driverName').value,
+                phone: document.getElementById('driverPhone').value,
+                rating: parseFloat(document.getElementById('driverRating').value),
+                car_id: document.getElementById('driverCar').value || null
+            };
+
+            if (!driverData.full_name || !driverData.phone) {
+                showNotification('Заполните все обязательные поля', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/drivers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(driverData)
+                });
+
+                if (response.ok) {
+                    showNotification('Водитель успешно добавлен', 'success');
+                    await refreshData();
+                    currentTab = 'drivers';
+                    renderTab('drivers');
+                    document.querySelector('[data-tab="drivers"]').classList.add('active');
+                    document.querySelector('[data-tab="add-driver"]').classList.remove('active');
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка добавления');
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function editCar(carId) {
+            const car = carsData.find(c => c.id === carId);
+            
+            const formHtml = `
+                <div class="form-group">
+                    <label>Госномер</label>
+                    <input type="text" id="editLicense" value="${car.license_plate}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Марка</label>
+                    <input type="text" id="editBrand" value="${car.brand}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Цвет</label>
+                    <input type="text" id="editColor" value="${car.color}">
+                </div>
+                <div class="form-group">
+                    <label>Расстояние до парка (км)</label>
+                    <input type="number" id="editDistance" value="${car.distance}" min="0.1" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Статус</label>
+                    <select id="editStatus">
+                        <option value="FREE" ${car.status === 'FREE' ? 'selected' : ''}>Свободен</option>
+                        <option value="BUSY" ${car.status === 'BUSY' ? 'selected' : ''}>Занят</option>
+                        <option value="REPAIR" ${car.status === 'REPAIR' ? 'selected' : ''}>В ремонте</option>
+                    </select>
+                </div>
+                <button onclick="saveCar(${carId})" class="secondary" style="width: 100%;">💾 Сохранить</button>
+            `;
+            
+            document.getElementById('modalTitle').textContent = `Редактирование автомобиля ${car.license_plate}`;
+            document.getElementById('modalBody').innerHTML = formHtml;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        async function saveCar(carId) {
+            const updates = {
+                color: document.getElementById('editColor').value,
+                distance: parseFloat(document.getElementById('editDistance').value),
+                status: document.getElementById('editStatus').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/cars/${carId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+
+                if (response.ok) {
+                    showNotification('Автомобиль обновлён', 'success');
+                    closeModal();
+                    await refreshData();
+                    renderTab(currentTab);
+                } else {
+                    throw new Error('Ошибка обновления');
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function editDriver(driverId) {
+            const driver = driversData.find(d => d.id === driverId);
+            const freeCars = carsData.filter(c => c.status === 'FREE' && (!c.driver || c.driver.id === driverId));
+            
+            const formHtml = `
+                <div class="form-group">
+                    <label>ФИО</label>
+                    <input type="text" id="editDriverName" value="${driver.full_name}">
+                </div>
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="text" id="editDriverPhone" value="${driver.phone}">
+                </div>
+                <div class="form-group">
+                    <label>Рейтинг</label>
+                    <input type="number" id="editDriverRating" value="${driver.rating}" min="0" max="5" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Автомобиль</label>
+                    <select id="editDriverCar">
+                        <option value="">Без автомобиля</option>
+                        ${freeCars.map(car => `
+                            <option value="${car.id}" ${driver.car_id === car.id ? 'selected' : ''}>
+                                ${car.license_plate} - ${car.brand}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+                <button onclick="saveDriver(${driver.id})" class="secondary" style="width: 100%;">💾 Сохранить</button>
+            `;
+            
+            document.getElementById('modalTitle').textContent = `Редактирование водителя ${driver.full_name}`;
+            document.getElementById('modalBody').innerHTML = formHtml;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        async function saveDriver(driverId) {
+            const updates = {
+                full_name: document.getElementById('editDriverName').value,
+                phone: document.getElementById('editDriverPhone').value,
+                rating: parseFloat(document.getElementById('editDriverRating').value),
+                car_id: document.getElementById('editDriverCar').value || null
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/drivers/${driverId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updates)
+                });
+
+                if (response.ok) {
+                    showNotification('Водитель обновлён', 'success');
+                    closeModal();
+                    await refreshData();
+                    renderTab(currentTab);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка обновления');
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function toggleDriverStatus(driverId, isActive) {
+            try {
+                const response = await fetch(`${API_URL}/drivers/${driverId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_active: isActive })
+                });
+
+                if (response.ok) {
+                    showNotification(`Водитель ${isActive ? 'активирован' : 'деактивирован'}`, 'success');
+                    await refreshData();
+                    renderTab(currentTab);
+                } else {
+                    throw new Error('Ошибка изменения статуса');
+                }
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Вспомогательные функции
+        async function refreshData() {
+            await loadAllData();
+            renderTab(currentTab);
+        }
+
+        function applyCarFilters() {
+            renderCarsTab();
+        }
+
+        function applyDriverFilters() {
+            renderDriversTab();
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+
+        function showNotification(message, type) {
+            const notifications = document.getElementById('notifications');
+            notifications.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                notifications.innerHTML = '';
+            }, 5000);
+        }
+
+        function showLoading() {
+            document.getElementById('content').innerHTML = '<div class="loading">Загрузка...</div>';
+        }
+
+        function hideLoading() {
+            // Убирается автоматически при рендеринге
+        }
+
+        // Закрытие модального окна по клику вне
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
